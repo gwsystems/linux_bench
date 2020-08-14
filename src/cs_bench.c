@@ -110,7 +110,7 @@ cs_bench_processes()
 
 	p = fork();
 	if (p == 0) {
-		set_prio(SCHED_FIFO, 1);
+		set_prio(SCHED_FIFO, 0);
 		t2_work();
 
 		exit(EXIT_SUCCESS);
