@@ -43,9 +43,11 @@ writer_work()
 		CHECK(read(pp2[0], &ts2, sizeof(cycle_t)));
 		ts3 = get_cyclecount();
 
-		results[i]  = ts2 - ts;
-		results2[i] = ts3 - ts2;
-		results3[i] = ts3 - ts;
+		if (ts2 > ts && ts3 > ts2) {
+			results[i]  = ts2 - ts;
+			results2[i] = ts3 - ts2;
+			results3[i] = ts3 - ts;
+		}
 	}
 }
 
