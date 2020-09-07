@@ -7,5 +7,6 @@ cd results
 
 ../pipe_bench
 ../mutex_bench
+../semaphore_bench
 ../timer_bench
 ../cs_bench
