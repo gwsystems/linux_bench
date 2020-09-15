@@ -2,7 +2,7 @@
 
 #include <pthread.h>
 #include <sched.h>
-#include <semaphore.h> 
+#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -12,11 +12,11 @@
 
 #define SEMAPHORE_NAME "bench"
 
-pthread_t           t1, t2;
-sem_t     	    lock;
-int                 pp[2];
-volatile int        flag;
-cycle_t *           results;
+pthread_t    t1, t2;
+sem_t        lock;
+int          pp[2];
+volatile int flag;
+cycle_t *    results;
 
 
 void *
@@ -99,7 +99,7 @@ mutex_bench()
 	sem_init(&lock, 0, 1);
 	pthread_create(&t1, NULL, no_contend_thread, &n1);
 	pthread_join(t1, NULL);
-	sem_destroy(&lock); 
+	sem_destroy(&lock);
 
 	utils_store_header("#####################BeginBench11-semaphore-no-contender");
 	utils_store_header("#Latency");
@@ -117,7 +117,7 @@ mutex_bench()
 	pthread_create(&t1, NULL, t1_contend_thread, &n1);
 	pthread_join(t2, NULL);
 	pthread_join(t1, NULL);
-	sem_destroy(&lock); 
+	sem_destroy(&lock);
 
 	utils_store_header("#####################BeginBench12-semaphore-contender");
 	utils_store_header("#Latency");
