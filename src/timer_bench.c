@@ -232,13 +232,11 @@ timer_bench()
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
 
-	printf("timer + signal + read:\n");
-
-	utils_store_results(results, "timer_bench-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "timer_bench.csv");
+	utils_store_header("#####################BeginBench13-timer+signal+read");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("timer + signal + read", results);
+	utils_store_header("#####################EndBench13-timer+signal+read");
 
 	utils_clean_results(results);
 
@@ -247,13 +245,11 @@ timer_bench()
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
 
-	printf("timer + signal + epoll:\n");
-
-	utils_store_results(results, "timer_bench-ep-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "timer_bench-ep.csv");
+	utils_store_header("#####################BeginBench14-timer+signal+epoll");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("timer + signal + read", results);
+	utils_store_header("#####################EndBench14-timer+signal+epoll");
 
 	utils_clean_results(results);
 
@@ -262,13 +258,11 @@ timer_bench()
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
 
-	printf("timerfd + read:\n");
-
-	utils_store_results(results, "timer_bench-fd-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "timer_bench-fd.csv");
+	utils_store_header("#####################BeginBench15-timerfd+read");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("timerfd + read", results);
+	utils_store_header("#####################EndBench15-timerfd+read");
 
 	utils_clean_results(results);
 
@@ -277,13 +271,11 @@ timer_bench()
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
 
-	printf("timerfd + epoll:\n");
-
-	utils_store_results(results, "timer_bench-fd_ep-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "timer_bench-fd_ep.csv");
+	utils_store_header("#####################BeginBench16-timerfd+epoll");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("timerfd + epoll", results);
+	utils_store_header("#####################EndBench16-timerfd+epoll");
 }
 
 

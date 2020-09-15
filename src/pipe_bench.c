@@ -78,7 +78,6 @@ oneway_bench_processes()
 	pid_t p;
 	int   status;
 
-	printf("pipe + between processes:\n");
 	utils_clean_results(results);
 	utils_clean_results(results2);
 	utils_clean_results(results3);
@@ -95,23 +94,24 @@ oneway_bench_processes()
 	}
 
 	waitpid(p, &status, 0);
-	utils_store_results(results, "pipe_bench-p_1w_rh-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "pipe_bench-p_1w_rh.csv");
 
-	utils_store_results(results2, "pipe_bench-p_1w_wh-unsorted.csv");
-	qsort(results2, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results2);
-	utils_print_results(results2);
-	utils_store_results(results2, "pipe_bench-p_1w_wh.csv");
+	utils_store_header("#####################BeginBench04-pipe-processes-oneway-reader-high-prio");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("pipe + between processes + oneway + reader high prio", results);
+	utils_store_header("#####################EndBench04-pipe-processes-oneway-reader-high-prio");
 
-	utils_store_results(results3, "pipe_bench-p_rt-unsorted.csv");
-	qsort(results3, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results3);
-	utils_print_results(results3);
-	utils_store_results(results3, "pipe_bench-p_rt.csv");
+	utils_store_header("#####################BeginBench05-pipe-processes-oneway-writer-high-prio");
+	utils_store_header("#Latency");
+	utils_store_results(results2);
+	utils_print_summary("pipe + between processes + oneway + writer high prio", results2);
+	utils_store_header("#####################EndBench05-pipe-processes-oneway-writer-high-prio");
+
+	utils_store_header("#####################BeginBench06-pipe-processes-roundtrip");
+	utils_store_header("#Latency");
+	utils_store_results(results3);
+	utils_print_summary("pipe + between processes + roundtrip", results3);
+	utils_store_header("#####################EndBench06-pipe-processes-roundtrip");
 }
 
 void
@@ -119,7 +119,6 @@ oneway_bench_threads()
 {
 	int n1, n2;
 
-	printf("pipe + between threads:\n");
 	utils_clean_results(results);
 	utils_clean_results(results2);
 	utils_clean_results(results3);
@@ -131,23 +130,23 @@ oneway_bench_threads()
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
 
-	utils_store_results(results, "pipe_bench-t_1w_rh-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "pipe_bench-t_1w_rh.csv");
+	utils_store_header("#####################BeginBench01-pipe-threads-oneway-reader-high-prio");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("pipe + between threads + oneway + reader high prio", results);
+	utils_store_header("#####################EndBench01-pipe-threads-oneway-reader-high-prio");
 
-	utils_store_results(results2, "pipe_bench-t_1w_wh-unsorted.csv");
-	qsort(results2, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results2);
-	utils_print_results(results2);
-	utils_store_results(results2, "pipe_bench-t_1w_wh.csv");
+	utils_store_header("#####################BeginBench02-pipe-threads-oneway-writer-high-prio");
+	utils_store_header("#Latency");
+	utils_store_results(results2);
+	utils_print_summary("pipe + between threads + oneway + writer high prio", results2);
+	utils_store_header("#####################EndBench02-pipe-threads-oneway-writer-high-prio");
 
-	utils_store_results(results3, "pipe_bench-t_rt-unsorted.csv");
-	qsort(results3, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results3);
-	utils_print_results(results3);
-	utils_store_results(results3, "pipe_bench-t_rt.csv");
+	utils_store_header("#####################BeginBench03-pipe-threads-roundtrip");
+	utils_store_header("#Latency");
+	utils_store_results(results3);
+	utils_print_summary("pipe + between threads + roundtrip", results3);
+	utils_store_header("#####################EndBench03-pipe-threads-roundtrip");
 }
 
 int

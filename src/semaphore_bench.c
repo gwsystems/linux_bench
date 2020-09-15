@@ -93,7 +93,6 @@ mutex_bench()
 {
 	int n1, n2;
 
-	printf("semaphore + no contender:\n");
 	utils_clean_results(results);
 
 	n1 = 0;
@@ -102,13 +101,12 @@ mutex_bench()
 	pthread_join(t1, NULL);
 	sem_destroy(&lock); 
 
-	utils_store_results(results, "semaphore_bench-no_con-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "semaphore_bench-no_con.csv");
+	utils_store_header("#####################BeginBench11-semaphore-no-contender");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("semaphore + no contender", results);
+	utils_store_header("#####################EndBench11-semaphore-no-contender");
 
-	printf("semaphore + contender:\n");
 	flag = 0;
 	utils_clean_results(results);
 
@@ -121,11 +119,11 @@ mutex_bench()
 	pthread_join(t1, NULL);
 	sem_destroy(&lock); 
 
-	utils_store_results(results, "semaphore_bench-con-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "semaphore_bench-con.csv");
+	utils_store_header("#####################BeginBench12-semaphore-contender");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("semaphore + contender", results);
+	utils_store_header("#####################EndBench12-semaphore-contender");
 }
 
 

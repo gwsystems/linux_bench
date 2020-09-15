@@ -91,7 +91,6 @@ mutex_bench()
 {
 	int n1, n2;
 
-	printf("mutex + no contender:\n");
 	utils_clean_results(results);
 
 	n1 = 0;
@@ -100,13 +99,12 @@ mutex_bench()
 	pthread_join(t1, NULL);
 	pthread_mutex_destroy(&lock);
 
-	utils_store_results(results, "mutex_bench-no_con-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "mutex_bench-no_con.csv");
+	utils_store_header("#####################BeginBench07-mutex-no-contender");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("mutex + no contender", results);
+	utils_store_header("#####################EndBench07-mutex-no-contender");
 
-	printf("mutex + contender:\n");
 	flag = 0;
 	utils_clean_results(results);
 
@@ -119,13 +117,12 @@ mutex_bench()
 	pthread_join(t1, NULL);
 	pthread_mutex_destroy(&lock);
 
-	utils_store_results(results, "mutex_bench-con-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "mutex_bench-con.csv");
+	utils_store_header("#####################BeginBench08-mutex-contender");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("mutex + contender", results);
+	utils_store_header("#####################EndBench08-mutex-contender");
 
-	printf("mutex + priority inheritance + no contender:\n");
 	utils_clean_results(results);
 
 	n1 = 0;
@@ -136,13 +133,12 @@ mutex_bench()
 	pthread_join(t1, NULL);
 	pthread_mutex_destroy(&lock);
 
-	utils_store_results(results, "mutex_bench-pi_no_con-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "mutex_bench-pi_no_con.csv");
+	utils_store_header("#####################BeginBench09-mutex-prio-inheritance-no-contender");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("mutex + prio inheritance + no contender", results);
+	utils_store_header("#####################EndBench09-mutex-prio-inheritance-no-contender");
 
-	printf("mutex latency + priority inheritance + contender:\n");
 	flag = 0;
 	utils_clean_results(results);
 
@@ -157,11 +153,11 @@ mutex_bench()
 	pthread_join(t1, NULL);
 	pthread_mutex_destroy(&lock);
 
-	utils_store_results(results, "mutex_bench-pi_con-unsorted.csv");
-	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
-	utils_eliminate_zero(results);
-	utils_print_results(results);
-	utils_store_results(results, "mutex_bench-pi_con.csv");
+	utils_store_header("#####################BeginBench10-mutex-prio-inheritance-contender");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("mutex + prio inheritance + contender", results);
+	utils_store_header("#####################EndBench10-mutex-prio-inheritance-contender");
 }
 
 

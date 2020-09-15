@@ -5,6 +5,8 @@
 #include "pmu.h"
 #include "utils.h"
 
+#define FNAME "bench_results"
+
 int
 utils_compare(const void *a, const void *b)
 {
@@ -38,8 +40,12 @@ utils_clean_results(cycle_t *results)
 }
 
 void
-utils_print_results(cycle_t *results)
+utils_print_summary(const char *string, cycle_t *results)
 {
+	printf("%s:\n", string);
+	qsort(results, ITERATION, sizeof(cycle_t), utils_compare);
+	utils_eliminate_zero(results);
+
 #if __i386__ || __x86_64__
 	printf("  results:\n    min: %llu\n    median: %llu\n    max: %llu\n", results[0], results[ITERATION / 2],
 	       results[ITERATION - 1]);
@@ -50,18 +56,32 @@ utils_print_results(cycle_t *results)
 }
 
 void
-utils_store_results(cycle_t *results, const char *fname)
+utils_store_header(const char *string)
 {
 	FILE *f;
 
-	f = fopen(fname, "w");
+	f = fopen(FNAME, "a");
+	if (f == NULL) { return; }
+
+	fprintf(f, "%s\n", string);
+
+	fclose(f);
+}
+
+
+void
+utils_store_results(cycle_t *results)
+{
+	FILE *f;
+
+	f = fopen(FNAME, "a");
 	if (f == NULL) { return; }
 
 #if __i386__ || __x86_64__
-	for (int i = 0; i < ITERATION - 1; i++) { fprintf(f, "%llu,", results[i]); }
-	fprintf(f, "%llu,", results[ITERATION - 1]);
+	for (int i = 0; i < ITERATION; i++) { fprintf(f, "Ticks (latency): %llu\n", results[i]); }
 #elif __arm__
-	for (int i = 0; i < ITERATION - 1; i++) { fprintf(f, "%u,", results[i]); }
-	fprintf(f, "%u,", results[ITERATION - 1]);
+	for (int i = 0; i < ITERATION; i++) { fprintf(f, "Ticks (latency): %u\n", results[i]); }
 #endif
+
+	fclose(f);
 }
