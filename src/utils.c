@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: BSD-2-CLAUSE */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "pmu.h"
 #include "utils.h"
