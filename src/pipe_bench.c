@@ -73,7 +73,7 @@ writer_thread(void *p)
 }
 
 void
-oneway_bench_processes()
+bench_processes()
 {
 	pid_t p;
 	int   status;
@@ -115,7 +115,7 @@ oneway_bench_processes()
 }
 
 void
-oneway_bench_threads()
+bench_threads()
 {
 	int n1, n2;
 
@@ -166,8 +166,8 @@ main(int argc, char *argv[])
 
 	init_perfcounters(1, 0);
 
-	oneway_bench_threads();
-	oneway_bench_processes();
+	bench_threads();
+	bench_processes();
 
 	close(pp[0]);
 	close(pp[1]);

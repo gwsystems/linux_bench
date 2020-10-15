@@ -89,11 +89,11 @@ cs_bench_threads()
 	pthread_join(t1, NULL);
 	pthread_join(t2, NULL);
 
-	utils_store_header("#####################BeginBench17-cs+threads");
+	utils_store_header("#####################BeginBench17-cs-threads");
 	utils_store_header("#Latency");
 	utils_store_results(results);
 	utils_print_summary("context switch + thread", results);
-	utils_store_header("#####################EndBench17-cs+threads");
+	utils_store_header("#####################EndBench17-cs-threads");
 }
 
 void
@@ -119,11 +119,11 @@ cs_bench_processes()
 
 	waitpid(p, &status, 0);
 
-	utils_store_header("#####################BeginBench18-cs+processes");
+	utils_store_header("#####################BeginBench18-cs-processes");
 	utils_store_header("#Latency");
 	utils_store_results(results);
 	utils_print_summary("context switch + processes", results);
-	utils_store_header("#####################EndBench18-cs+processes");
+	utils_store_header("#####################EndBench18-cs-processes");
 }
 
 int
