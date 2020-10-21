@@ -4,6 +4,7 @@
 #include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/epoll.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include "pmu.h"
@@ -51,6 +52,57 @@ writer_work()
 	}
 }
 
+void
+reader_ep_work()
+{
+	int                epfd;
+	cycle_t            ts;
+	struct epoll_event ev;
+
+	epfd      = epoll_create(1);
+	ev.events = EPOLLIN | EPOLLET;
+	CHECK(epoll_ctl(epfd, EPOLL_CTL_ADD, pp[0], &ev));
+
+	CHECK(read(pp3[0], &ts, sizeof(cycle_t)));
+	CHECK(write(pp4[1], &ts, sizeof(cycle_t)));
+
+	for (int i = 0; i < ITERATION; i++) {
+		epoll_wait(epfd, &ev, ITERATION, -1);
+		CHECK(read(pp[0], &ts, sizeof(cycle_t)));
+		ts = get_cyclecount();
+		CHECK(write(pp2[1], &ts, sizeof(cycle_t)));
+	}
+}
+
+void
+writer_ep_work()
+{
+	int                epfd;
+	cycle_t            ts, ts2, ts3;
+	struct epoll_event ev;
+
+	epfd      = epoll_create(1);
+	ev.events = EPOLLIN | EPOLLET;
+	CHECK(epoll_ctl(epfd, EPOLL_CTL_ADD, pp2[0], &ev));
+
+	CHECK(write(pp3[1], &ts, sizeof(cycle_t)));
+	CHECK(read(pp4[0], &ts, sizeof(cycle_t)));
+
+	for (int i = 0; i < ITERATION; i++) {
+		ts = get_cyclecount();
+		CHECK(write(pp[1], &ts, sizeof(cycle_t)));
+		epoll_wait(epfd, &ev, ITERATION, -1);
+		CHECK(read(pp2[0], &ts2, sizeof(cycle_t)));
+		ts3 = get_cyclecount();
+
+		if (ts2 > ts && ts3 > ts2) {
+			results[i]  = ts2 - ts;
+			results2[i] = ts3 - ts2;
+			results3[i] = ts3 - ts;
+		}
+	}
+}
+
 
 void *
 reader_thread(void *p)
@@ -68,6 +120,26 @@ writer_thread(void *p)
 	pthread_prio(SCHED_RR, t2, *(int *)p);
 
 	writer_work();
+
+	return NULL;
+}
+
+void *
+reader_ep_thread(void *p)
+{
+	pthread_prio(SCHED_RR, t1, *(int *)p);
+
+	reader_ep_work();
+
+	return NULL;
+}
+
+void *
+writer_ep_thread(void *p)
+{
+	pthread_prio(SCHED_RR, t2, *(int *)p);
+
+	writer_ep_work();
 
 	return NULL;
 }
@@ -112,6 +184,41 @@ bench_processes()
 	utils_store_results(results3);
 	utils_print_summary("pipe + between processes + roundtrip", results3);
 	utils_store_header("#####################EndBench06-pipe-processes-roundtrip");
+
+	utils_clean_results(results);
+	utils_clean_results(results2);
+	utils_clean_results(results3);
+
+	p = fork();
+	if (p == 0) {
+		set_prio(SCHED_RR, 0);
+		reader_ep_work();
+
+		exit(EXIT_SUCCESS);
+	} else {
+		set_prio(SCHED_RR, 1);
+		writer_ep_work();
+	}
+
+	waitpid(p, &status, 0);
+
+	utils_store_header("#####################BeginBench22-pipe-processes-ep-oneway-reader-high-prio");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("pipe + between processes + epoll + oneway + reader high prio", results);
+	utils_store_header("#####################EndBench22-pipe-processes-ep-oneway-reader-high-prio");
+
+	utils_store_header("#####################BeginBench23-pipe-processes-ep-oneway-writer-high-prio");
+	utils_store_header("#Latency");
+	utils_store_results(results2);
+	utils_print_summary("pipe + between processes + epoll + oneway + writer high prio", results2);
+	utils_store_header("#####################EndBench23-pipe-processes-ep-oneway-writer-high-prio");
+
+	utils_store_header("#####################BeginBench24-pipe-processes-ep-roundtrip");
+	utils_store_header("#Latency");
+	utils_store_results(results3);
+	utils_print_summary("pipe + between processes + epoll + roundtrip", results3);
+	utils_store_header("#####################EndBench24-pipe-processes-ep-roundtrip");
 }
 
 void
@@ -147,6 +254,35 @@ bench_threads()
 	utils_store_results(results3);
 	utils_print_summary("pipe + between threads + roundtrip", results3);
 	utils_store_header("#####################EndBench03-pipe-threads-roundtrip");
+
+	utils_clean_results(results);
+	utils_clean_results(results2);
+	utils_clean_results(results3);
+
+	n1 = 0;
+	n2 = 1;
+	pthread_create(&t1, NULL, reader_ep_thread, &n1);
+	pthread_create(&t2, NULL, writer_ep_thread, &n2);
+	pthread_join(t1, NULL);
+	pthread_join(t2, NULL);
+
+	utils_store_header("#####################BeginBench19-pipe-threads-ep-oneway-reader-high-prio");
+	utils_store_header("#Latency");
+	utils_store_results(results);
+	utils_print_summary("pipe + between threads + epoll + oneway + reader high prio", results);
+	utils_store_header("#####################EndBench19-pipe-threads-ep-oneway-reader-high-prio");
+
+	utils_store_header("#####################BeginBench20-pipe-threads-ep-oneway-writer-high-prio");
+	utils_store_header("#Latency");
+	utils_store_results(results2);
+	utils_print_summary("pipe + between threads + epoll + oneway + writer high prio", results2);
+	utils_store_header("#####################EndBench20-pipe-threads-ep-oneway-writer-high-prio");
+
+	utils_store_header("#####################BeginBench21-pipe-threads-ep-roundtrip");
+	utils_store_header("#Latency");
+	utils_store_results(results3);
+	utils_print_summary("pipe + between threads + epoll + roundtrip", results3);
+	utils_store_header("#####################EndBench21-pipe-threads-ep-roundtrip");
 }
 
 int
