@@ -11,17 +11,15 @@
 #include "priority.h"
 #include "utils.h"
 
-#define CORE_MAX 6
 #define PAGE_SIZE 4096
 
 volatile int counter;
-pthread_t    tid[CORE_MAX];
 cycle_t *    results, *results2;
 
 struct arg {
 	void *p;
 	int   core;
-	int   cores;
+	int   n_cores;
 };
 
 void *
@@ -29,13 +27,13 @@ mmap_bench(void *args)
 {
 	char    title[32];
 	cycle_t t, tt, ttt;
-	int     core, cores;
+	int     core, n_cores;
 	void *  p;
 
-	core  = ((struct arg *)args)->core;
-	cores = ((struct arg *)args)->cores;
-	p     = ((struct arg *)args)->p;
-	// printf("%d %d %p\n", core, cores, p);
+	core    = ((struct arg *)args)->core;
+	n_cores = ((struct arg *)args)->n_cores;
+	p       = ((struct arg *)args)->p;
+	// printf("%d %d %p\n", core, n_n_cores, p);
 
 	set_affinity2(core);
 
@@ -45,12 +43,12 @@ mmap_bench(void *args)
 
 	counter++;
 	usleep(300);
-	while (counter < cores) {}
+	while (counter < n_cores) {}
 
 	for (int i = 0; i < ITERATION; i++) {
-		t = get_cyclecount();
-		p = mmap(p, PAGE_SIZE, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE,
-		         -1, 0);
+		t  = get_cyclecount();
+		p  = mmap(p, PAGE_SIZE, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE,
+                         -1, 0);
 		tt = get_cyclecount();
 		munmap(p, PAGE_SIZE);
 		ttt = get_cyclecount();
@@ -63,10 +61,10 @@ mmap_bench(void *args)
 	}
 
 	if (core == 0) {
-		sprintf(title, "%d cores: mmap", cores);
+		sprintf(title, "%d cores: mmap", n_cores);
 		utils_print_summary(title, results);
 
-		sprintf(title, "%d cores: munmap", cores);
+		sprintf(title, "%d cores: munmap", n_cores);
 		utils_print_summary(title, results2);
 	}
 
@@ -76,8 +74,10 @@ mmap_bench(void *args)
 int
 main(int argc, char *argv[])
 {
-	struct arg *args[CORE_MAX];
-	void *      p_pool[CORE_MAX];
+	int         n_cores = sysconf(_SC_NPROCESSORS_ONLN) / 2; // Assuming always run with HT enabled
+	pthread_t   tid[n_cores];
+	struct arg *args[n_cores];
+	void *      p_pool[n_cores];
 
 	set_affinity();
 
@@ -86,8 +86,7 @@ main(int argc, char *argv[])
 
 	init_perfcounters(1, 0);
 
-
-	for (int i = 1; i <= CORE_MAX; i++) {
+	for (int i = 1; i <= n_cores; i++) {
 		// printf("%d\n", i);
 		counter = 0;
 
@@ -101,9 +100,9 @@ main(int argc, char *argv[])
 
 		// printf("Creating threads\n");
 		for (int j = 0; j < i; j++) {
-			args[j]->core  = j;
-			args[j]->cores = i;
-			args[j]->p     = p_pool[j];
+			args[j]->core    = j;
+			args[j]->n_cores = i;
+			args[j]->p       = p_pool[j];
 			pthread_create(&tid[j], NULL, mmap_bench, args[j]);
 		}
 

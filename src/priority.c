@@ -52,7 +52,7 @@ set_affinity2(int cpu)
 	cpu_set_t my_set;
 
 	CPU_ZERO(&my_set);
-	CPU_SET(cpu * 2, &my_set);
+	CPU_SET(cpu * 2, &my_set); // Always assuming run with HT enabled
 
 	if (sched_setaffinity(0, sizeof(cpu_set_t), &my_set) < 0) { perror("set_affinity: "); }
 }
