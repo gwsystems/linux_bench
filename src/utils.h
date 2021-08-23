@@ -6,7 +6,7 @@
 #include <errno.h>
 #include "pmu.h"
 
-#define ITERATION 10 * 1000
+#define ITERATION 1000 * 1000 
 
 #define CHECK(x)                                                                                           \
 	do {                                                                                               \

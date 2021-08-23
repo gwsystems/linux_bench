@@ -8,7 +8,7 @@ BIN = linux_bench
 
 deps = src/priority.c src/utils.c
 
-all: pipe_bench mutex_bench semaphore_bench timer_bench cs_bench sysc_bench bench_script
+all: pipe_bench mutex_bench semaphore_bench timer_bench cs_bench sysc_bench mmap_bench bench_script
 
 pipe_bench:
 	@mkdir -p $(BUILD_OUTPUT)
@@ -33,6 +33,10 @@ cs_bench:
 sysc_bench:
 	@mkdir -p $(BUILD_OUTPUT)
 	$(CC) $(SRC_DIR)/sysc_bench.c $(deps) -o $(BUILD_OUTPUT)/$@ $(CFLAGS)
+
+mmap_bench:
+	@mkdir -p $(BUILD_OUTPUT)
+	$(CC) $(SRC_DIR)/mmap_bench.c $(deps) -o $(BUILD_OUTPUT)/$@ $(CFLAGS)
 
 bench_script:
 	@mkdir -p $(BUILD_OUTPUT)

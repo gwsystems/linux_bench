@@ -47,6 +47,17 @@ set_affinity()
 }
 
 void
+set_affinity2(int cpu)
+{
+	cpu_set_t my_set;
+
+	CPU_ZERO(&my_set);
+	CPU_SET(cpu * 2, &my_set);
+
+	if (sched_setaffinity(0, sizeof(cpu_set_t), &my_set) < 0) { perror("set_affinity: "); }
+}
+
+void
 pthread_prio(int scheduler, pthread_t thread, unsigned int nice)
 {
 	struct sched_param sp;
