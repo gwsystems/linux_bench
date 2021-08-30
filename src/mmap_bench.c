@@ -7,14 +7,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+#include "barrier.h"
 #include "pmu.h"
 #include "priority.h"
 #include "utils.h"
 
+#undef ITERATION
+#define ITERATION 100 * 1000
+
 #define PAGE_SIZE 4096
 
-volatile int counter;
-cycle_t *    results, *results2;
+struct simple_barrier b;
+cycle_t *             results, *results2;
 
 struct arg {
 	void *p;
@@ -33,17 +37,13 @@ mmap_bench(void *args)
 	core    = ((struct arg *)args)->core;
 	n_cores = ((struct arg *)args)->n_cores;
 	p       = ((struct arg *)args)->p;
-	// printf("%d %d %p\n", core, n_n_cores, p);
 
 	set_affinity2(core);
-
 
 	utils_clean_results(results);
 	utils_clean_results(results2);
 
-	counter++;
-	usleep(300);
-	while (counter < n_cores) {}
+	simple_barrier(&b);
 
 	for (int i = 0; i < ITERATION; i++) {
 		t  = get_cyclecount();
@@ -61,11 +61,92 @@ mmap_bench(void *args)
 	}
 
 	if (core == 0) {
-		sprintf(title, "%d cores: mmap", n_cores);
+		sprintf(title, "%d cores: mmap w/ munmap: mmap", n_cores);
 		utils_print_summary(title, results);
 
-		sprintf(title, "%d cores: munmap", n_cores);
+		sprintf(title, "%d cores: mmap w/ munmap: munmap", n_cores);
 		utils_print_summary(title, results2);
+	}
+
+	return NULL;
+}
+
+void *
+mmap_only_bench(void *args)
+{
+	char    title[32];
+	cycle_t t, tt;
+	int     core, n_cores;
+	void *  p;
+
+	core    = ((struct arg *)args)->core;
+	n_cores = ((struct arg *)args)->n_cores;
+	p       = ((struct arg *)args)->p;
+
+	set_affinity2(core);
+
+	utils_clean_results(results);
+
+	simple_barrier(&b);
+
+	for (int i = 0; i < ITERATION; i++) {
+		t  = get_cyclecount();
+		p  = mmap(p, PAGE_SIZE, PROT_EXEC | PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE,
+                         -1, 0);
+		tt = get_cyclecount();
+		p  = (char *)p + PAGE_SIZE;
+
+		if (core == 0) {
+			if (tt > t) { results[i] = tt - t; }
+		}
+	}
+
+	if (core == 0) {
+		sprintf(title, "%d cores: mmap", n_cores);
+		utils_print_summary(title, results);
+	}
+
+	p = (char *)p - (PAGE_SIZE * ITERATION);
+	munmap(p, PAGE_SIZE * ITERATION);
+
+	return NULL;
+}
+
+void *
+munmap_only_bench(void *args)
+{
+	char    title[32];
+	cycle_t t, tt;
+	int     core, n_cores;
+	void *  p;
+
+	core    = ((struct arg *)args)->core;
+	n_cores = ((struct arg *)args)->n_cores;
+	p       = ((struct arg *)args)->p;
+
+	set_affinity2(core);
+
+	utils_clean_results(results);
+
+	p = mmap(p, PAGE_SIZE * ITERATION, PROT_EXEC | PROT_READ | PROT_WRITE,
+	         MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, -1, 0);
+
+	simple_barrier(&b);
+
+	for (int i = 0; i < ITERATION; i++) {
+		t = get_cyclecount();
+		munmap(p, PAGE_SIZE);
+		tt = get_cyclecount();
+		p  = (char *)p + PAGE_SIZE;
+
+		if (core == 0) {
+			if (tt > t) { results[i] = tt - t; }
+		}
+	}
+
+	if (core == 0) {
+		sprintf(title, "%d cores: munmap", n_cores);
+		utils_print_summary(title, results);
 	}
 
 	return NULL;
@@ -87,16 +168,15 @@ main(int argc, char *argv[])
 	init_perfcounters(1, 0);
 
 	for (int i = 1; i <= n_cores; i++) {
-		// printf("%d\n", i);
-		counter = 0;
+		simple_barrier_init(&b, i);
 
 		for (int j = 0; j < i; j++) {
 			args[j]   = malloc(sizeof(struct arg));
-			p_pool[j] = mmap(NULL, PAGE_SIZE, PROT_EXEC | PROT_READ | PROT_WRITE,
+			p_pool[j] = mmap(NULL, PAGE_SIZE * ITERATION, PROT_EXEC | PROT_READ | PROT_WRITE,
 			                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, -1, 0);
 		}
 
-		for (int j = 0; j < i; j++) { munmap(p_pool[j], PAGE_SIZE); }
+		for (int j = 0; j < i; j++) { munmap(p_pool[j], PAGE_SIZE * ITERATION); }
 
 		// printf("Creating threads\n");
 		for (int j = 0; j < i; j++) {
@@ -104,6 +184,56 @@ main(int argc, char *argv[])
 			args[j]->n_cores = i;
 			args[j]->p       = p_pool[j];
 			pthread_create(&tid[j], NULL, mmap_bench, args[j]);
+		}
+
+		for (int j = 0; j < i; j++) {
+			pthread_join(tid[j], NULL);
+			free(args[j]);
+		}
+	}
+
+	for (int i = 1; i <= n_cores; i++) {
+		simple_barrier_init(&b, i);
+
+		for (int j = 0; j < i; j++) {
+			args[j]   = malloc(sizeof(struct arg));
+			p_pool[j] = mmap(NULL, PAGE_SIZE * ITERATION, PROT_EXEC | PROT_READ | PROT_WRITE,
+			                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, -1, 0);
+		}
+
+		for (int j = 0; j < i; j++) { munmap(p_pool[j], PAGE_SIZE * ITERATION); }
+
+		// printf("Creating threads\n");
+		for (int j = 0; j < i; j++) {
+			args[j]->core    = j;
+			args[j]->n_cores = i;
+			args[j]->p       = p_pool[j];
+			pthread_create(&tid[j], NULL, mmap_only_bench, args[j]);
+		}
+
+		for (int j = 0; j < i; j++) {
+			pthread_join(tid[j], NULL);
+			free(args[j]);
+		}
+	}
+
+	for (int i = 1; i <= n_cores; i++) {
+		simple_barrier_init(&b, i);
+
+		for (int j = 0; j < i; j++) {
+			args[j]   = malloc(sizeof(struct arg));
+			p_pool[j] = mmap(NULL, PAGE_SIZE * ITERATION, PROT_EXEC | PROT_READ | PROT_WRITE,
+			                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_POPULATE, -1, 0);
+		}
+
+		for (int j = 0; j < i; j++) { munmap(p_pool[j], PAGE_SIZE * ITERATION); }
+
+		// printf("Creating threads\n");
+		for (int j = 0; j < i; j++) {
+			args[j]->core    = j;
+			args[j]->n_cores = i;
+			args[j]->p       = p_pool[j];
+			pthread_create(&tid[j], NULL, munmap_only_bench, args[j]);
 		}
 
 		for (int j = 0; j < i; j++) {
