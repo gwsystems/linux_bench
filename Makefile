@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: BSD-2-CLAUSE
 
 CC = $(CROSS_COMPILE)gcc
-CFLAGS = -lpthread -lrt -g -O3 -Wall -Werror
+CFLAGS = -lpthread -lrt -g -O3 -Wall -Werror -Wno-unused-result
 SRC_DIR = src
 BUILD_OUTPUT = out
 BIN = linux_bench
